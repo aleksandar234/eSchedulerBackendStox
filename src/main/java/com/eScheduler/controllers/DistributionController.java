@@ -13,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping(path = "/api/distributions")
@@ -62,5 +63,11 @@ public class DistributionController {
             @PathVariable("teacherEmail") @Parameter(description = "email of teacher that need to be returnes") String email ) {
         List<StandardUserDTO> standardUserDTO = distributionService.getDistributionByTeacher(email);
         return ResponseEntity.status(HttpStatus.OK).body(standardUserDTO);
+    }
+    @PostMapping("/import")
+    @Operation(summary = "Import distributions from JSON", description = "Imports distribution entries from JSON structure")
+    public ResponseEntity<String> importDistributions(@RequestBody List<Map<String, Object>> jsonList) {
+        distributionService.importDistributionsFromJson(jsonList);
+        return ResponseEntity.status(HttpStatus.CREATED).body("Uvoz uspešno završen.");
     }
 }

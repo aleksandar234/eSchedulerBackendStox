@@ -22,4 +22,7 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
 
     @Query("SELECT t FROM Teacher t WHERE t.title = ?1")
     List<Teacher> findByType(String type);
+
+    Optional<Teacher> findByUserLoginEmail(String email);
+
 }
