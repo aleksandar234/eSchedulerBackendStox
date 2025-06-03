@@ -150,6 +150,13 @@ public class DistributionService {
 
     @Transactional
     public void importDistributionsFromJson(List<Map<String, Object>> jsonData) {
+
+        // === DROP ALL EXISTING DATA ===
+        distributionRepository.deleteAll();
+        subjectRepository.deleteAll();
+        teacherRepository.deleteAll();
+        userLoginRepository.deleteAll();
+
         for (Map<String, Object> item : jsonData) {
             // === Teacher ===
             Map<String, Object> teacherMap = (Map<String, Object>) item.get("teacher");
