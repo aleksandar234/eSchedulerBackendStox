@@ -109,7 +109,8 @@ public class DistributionService {
         Distribution oldDistribution = distributionRepository.findById(distribution.getId())
                 .orElseThrow(() -> new NotFoundException("Raspodela sa tim Id ne postoji"));
 
-        Subject subject = distributionRepository.findBySubjectName(distribution.getSubject());
+//        Subject subject = distributionRepository.findBySubjectName(distribution.getSubject());
+        Subject subject = oldDistribution.getSubject();
         List<Distribution> distributionsWithSameSubject = distributionRepository.findBySubject(subject,distribution.getClassType());
 
         Teacher teacher = distributionRepository.findByTeacherEmail(distribution.getTeacher());
