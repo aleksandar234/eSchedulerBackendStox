@@ -72,8 +72,8 @@ public class DistributionService {
         return standardUserDTOS;
     }
 
-    public DistributionDTO addNewDistribution(DistributionRequestDTO distribution){
-        Subject subject = distributionRepository.findBySubjectName(distribution.getSubject());
+    public DistributionDTO addNewDistribution(DistributionRequestDTO distribution,String studyProgram, String semester){
+        Subject subject = distributionRepository.findBySubjectNameStudyProgramSemester(distribution.getSubject(),studyProgram,semester);
         List<Distribution> distributionsWithSameSubject = distributionRepository.findBySubject(subject,distribution.getClassType());
 
         Teacher teacher = distributionRepository.findByTeacherEmail(distribution.getTeacher());

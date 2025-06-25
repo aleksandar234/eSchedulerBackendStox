@@ -29,5 +29,9 @@ public interface DistributionRepository extends JpaRepository<Distribution, Long
 
     @Query("SELECT d FROM Distribution d WHERE d.teacher.userLogin.email = ?1")
     List<Distribution> getDistributionByTeacherEmail(String email);
+
+    @Query("SELECT s FROM Subject s WHERE s.name = ?1 AND s.studyProgram = ?2 AND s.semester = ?3")
+    Subject findBySubjectNameStudyProgramSemester(String name, String studyProgram, String semester);
+
 }
 

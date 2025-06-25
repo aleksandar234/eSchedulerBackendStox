@@ -36,8 +36,11 @@ public class DistributionController {
     @PostMapping
     @Operation(summary = "Create a new distribution", description = "Add a new distribution to the system")
     public ResponseEntity<DistributionDTO> createDistribution(
-            @RequestBody @Parameter(description = "Details of the new distribution") DistributionRequestDTO distribution){
-        DistributionDTO savedDistribution = distributionService.addNewDistribution(distribution);
+            @RequestBody @Parameter(description = "Details of the new distribution") DistributionRequestDTO distribution,
+            @RequestParam String studyProgram,
+            @RequestParam String semester) {
+
+        DistributionDTO savedDistribution = distributionService.addNewDistribution(distribution, studyProgram, semester);
         return ResponseEntity.status(HttpStatus.CREATED).body(savedDistribution);
     }
 

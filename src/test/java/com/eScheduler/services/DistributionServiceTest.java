@@ -121,7 +121,6 @@ class DistributionServiceTest {
         assertEquals(subject.getName(), result.getSubject().getName());
 
         verify(distributionRepository, times(1)).findById(request.getId());
-        verify(distributionRepository, times(1)).findBySubjectName(request.getSubject());
         verify(distributionRepository, times(1)).findByTeacherEmail(request.getTeacher());
     }
 
