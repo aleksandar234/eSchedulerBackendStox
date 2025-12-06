@@ -219,4 +219,7 @@ public class DistributionService {
         return new DistributionDTO(distribution.getId(),teacherDTO,subjectDTO, distribution.getClassType(),distribution.getSessionCount());
     }
 
+    public DistributionDTO addNewDistribution(DistributionRequestDTO dto) {
+        return addNewDistribution(dto, dto.getSubject(), dto.getClassType());
+    }
 }
