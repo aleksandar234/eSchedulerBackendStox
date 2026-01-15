@@ -1,5 +1,6 @@
 package com.eScheduler.responses.customDTOClasses;
 
+import com.eScheduler.model.SchoolYear;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;

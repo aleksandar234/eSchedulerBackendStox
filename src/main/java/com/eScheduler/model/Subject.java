@@ -46,4 +46,8 @@ public class Subject {
 
     @OneToMany(mappedBy = "subject", cascade = CascadeType.ALL)
     private List<Distribution> distributions;
+
+    @ManyToOne
+    @JoinColumn(name = "id_skolska_godina")
+    private SchoolYear schoolYear;
 }

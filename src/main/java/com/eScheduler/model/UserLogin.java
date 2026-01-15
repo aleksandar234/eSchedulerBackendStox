@@ -4,6 +4,9 @@ import com.eScheduler.model.enums.Roles;
 import jakarta.persistence.*;
 import lombok.Data;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "korisnik")
 @Data
@@ -22,7 +25,7 @@ public class UserLogin {
     @Column(name = "lozinka")
     private String password;
 
-    @OneToOne(mappedBy = "userLogin", cascade = CascadeType.ALL)
-    private Teacher teacher;
+    @OneToMany(mappedBy = "userLogin", cascade = CascadeType.ALL)
+    private List<Teacher> teacherList = new ArrayList<>();
 
 }

@@ -28,11 +28,15 @@ public class Teacher {
     @Column(name = "zvanje")
     private String title;
 
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "email", referencedColumnName = "email")
     private UserLogin userLogin;
 
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL)
     private List<Distribution> distributions;
+
+    @ManyToOne
+    @JoinColumn(name = "id_skolska_godina")
+    private SchoolYear schoolYear;
 
 }

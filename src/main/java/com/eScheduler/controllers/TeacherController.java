@@ -1,5 +1,6 @@
 package com.eScheduler.controllers;
 
+import com.eScheduler.model.Teacher;
 import com.eScheduler.requests.TeacherRequestDTO;
 import com.eScheduler.responses.customDTOClasses.TeacherDTO;
 import com.eScheduler.services.TeacherService;
@@ -68,6 +69,20 @@ public class TeacherController {
     public ResponseEntity<List<TeacherDTO>> getAssistants() {
         List<TeacherDTO> assistants = teacherService.getAssistants();
         return ResponseEntity.status(HttpStatus.OK).body(assistants);
+    }
+
+    // Dohvatanje svih profesora za određenu školsku godinu
+    @GetMapping("/school-year/{schoolYearId}")
+    public List<TeacherDTO> getTeachersBySchoolYear(@PathVariable("schoolYearId") Long schoolYearId) {
+        return teacherService.getTeachersBySchoolYear(schoolYearId);
+    }
+
+
+    //  Dohvatanje profesora za aktivnu školsku godinu
+    @GetMapping("/active")
+    public ResponseEntity<List<Teacher>> getTeachersForActiveYear() {
+        List<Teacher> teachers = teacherService.getTeachersForActiveYear();
+        return ResponseEntity.ok(teachers);
     }
 
 }

@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class TeacherService {
@@ -121,6 +123,31 @@ public class TeacherService {
     }
     public TeacherDTO mapRequestTeacherDTOToTeacherDTO(TeacherRequestDTO teacher){
         return new TeacherDTO(teacher.getId(), teacher.getEmail(), teacher.getFirstName(), teacher.getLastName(), teacher.getTitle(), teacher.isAdmin());
+    }
+
+    // Dohvatanje svih profesora po školskoj godini
+    public List<TeacherDTO> getTeachersBySchoolYear(Long schoolYearId) {
+        List<Teacher> teachers = teacherRepository.findBySchoolYearId(schoolYearId);
+        return teachers.stream()
+                .map(t -> new TeacherDTO(
+                        t.getId(),
+                        t.getUserLogin().getEmail(),
+                        t.getFirstName(),
+                        t.getLastName(),
+                        t.getTitle(),
+                        t.getUserLogin().isAdmin()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    // Dohvatanje profesora po imenu i školskoj godini
+    public Optional<Teacher> getTeacherByNameAndYear(String firstName, Long schoolYearId) {
+        return teacherRepository.findByNameAndYear(firstName, schoolYearId);
+    }
+
+    // Dohvatanje profesora koji pripadaju aktivnoj školskoj godini
+    public List<Teacher> getTeachersForActiveYear() {
+        return teacherRepository.findAllByActiveSchoolYear();
     }
 
 }

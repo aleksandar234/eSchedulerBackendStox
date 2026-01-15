@@ -4,19 +4,10 @@ package com.eScheduler.services;
 import com.eScheduler.exceptions.custom.ConflictException;
 import com.eScheduler.exceptions.custom.NotFoundException;
 import com.eScheduler.exceptions.custom.ServerErrorException;
-import com.eScheduler.model.Distribution;
-import com.eScheduler.model.Subject;
-import com.eScheduler.model.Teacher;
-import com.eScheduler.model.UserLogin;
-import com.eScheduler.repositories.DistributionRepository;
-import com.eScheduler.repositories.SubjectRepository;
-import com.eScheduler.repositories.TeacherRepository;
-import com.eScheduler.repositories.UserLoginRepository;
+import com.eScheduler.model.*;
+import com.eScheduler.repositories.*;
 import com.eScheduler.requests.DistributionRequestDTO;
-import com.eScheduler.responses.customDTOClasses.DistributionDTO;
-import com.eScheduler.responses.customDTOClasses.StandardUserDTO;
-import com.eScheduler.responses.customDTOClasses.SubjectDTO;
-import com.eScheduler.responses.customDTOClasses.TeacherDTO;
+import com.eScheduler.responses.customDTOClasses.*;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.transaction.Transactional;
@@ -32,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Service
 public class DistributionService {
@@ -39,15 +31,19 @@ public class DistributionService {
     private final TeacherRepository teacherRepository;
     private final SubjectRepository subjectRepository;
     private final UserLoginRepository userLoginRepository;
+    private final SchoolYearService schoolYearService;
+    private final SchoolYearRepository schoolYearRepository;
 
 
 
     @Autowired
-    public DistributionService(DistributionRepository distributionRepository,TeacherRepository teacherRepository, SubjectRepository subjectRepository, UserLoginRepository userLoginRepository) {
+    public DistributionService(DistributionRepository distributionRepository, TeacherRepository teacherRepository, SubjectRepository subjectRepository, UserLoginRepository userLoginRepository, SchoolYearService schoolYearService, SchoolYearRepository schoolYearRepository) {
         this.distributionRepository = distributionRepository;
         this.teacherRepository = teacherRepository;
         this.subjectRepository = subjectRepository;
         this.userLoginRepository = userLoginRepository;
+        this.schoolYearService = schoolYearService;
+        this.schoolYearRepository = schoolYearRepository;
     }
 
     public List<DistributionDTO> getAllDistributions() {
@@ -91,7 +87,10 @@ public class DistributionService {
                 throw new ConflictException("Prekoracen broj casova za ovaj tip nastave");
             }
         }
-        Distribution newDistribution = new Distribution(0L,teacher,subject,distribution.getClassType(),distribution.getSessionCount());
+
+        SchoolYear activeSchoolYear = schoolYearService.getActiveSchoolYears();
+
+        Distribution newDistribution = new Distribution(0L,teacher,subject,distribution.getClassType(),distribution.getSessionCount(), activeSchoolYear);
 
         distributionRepository.save(newDistribution);
         return mapToDistributionDTO(newDistribution);
@@ -132,7 +131,9 @@ public class DistributionService {
             }
         }
 
-        Distribution newDistribution = new Distribution(distribution.getId(),teacher,subject,distribution.getClassType(),distribution.getSessionCount());
+        SchoolYear activeSchoolYear = schoolYearService.getActiveSchoolYears();
+
+        Distribution newDistribution = new Distribution(distribution.getId(),teacher,subject,distribution.getClassType(),distribution.getSessionCount(), activeSchoolYear);
         for (Field field : Distribution.class.getDeclaredFields()) {
             try {
                 field.setAccessible(true);
@@ -222,4 +223,233 @@ public class DistributionService {
     public DistributionDTO addNewDistribution(DistributionRequestDTO dto) {
         return addNewDistribution(dto, dto.getSubject(), dto.getClassType());
     }
+
+
+    public List<DistributionDTO> getBySchoolYear(Long schoolYear) {
+        List<Distribution> distributions = distributionRepository.findBySchoolYearId(schoolYear);
+        List<DistributionDTO> distributionDTOS = new ArrayList<>();
+        distributions.forEach(distribution -> {
+            distributionDTOS.add(mapToDistributionDTO(distribution));
+        });
+        return distributionDTOS;
+    }
+
+    @Transactional
+    public void copySubjects(Long sourceYearId, Long targetYearId) {
+        SchoolYear targetYear = schoolYearService.getSchoolYearById(targetYearId);
+
+        List<Subject> sourceSubjects = subjectRepository.findBySchoolYearId(sourceYearId);
+
+        for(Subject s: sourceSubjects) {
+            boolean exists = subjectRepository.existsByNameAndStudyProgramAndSchoolYearId(s.getName(), s.getStudyProgram(), targetYearId);
+
+            if(!exists) {
+                Subject copy = new Subject();
+                copy.setName(s.getName());
+                copy.setStudyProgram(s.getStudyProgram());
+                copy.setSemester(s.getSemester());
+                copy.setLectureHours(s.getLectureHours());
+                copy.setExerciseHours(s.getExerciseHours());
+                copy.setPracticumHours(s.getPracticumHours());
+                copy.setMandatory(s.getMandatory());
+                copy.setLectureSessions(s.getLectureSessions());
+                copy.setExerciseSessions(s.getExerciseSessions());
+                copy.setSchoolYear(targetYear);
+
+                subjectRepository.save(copy);
+            }
+
+        }
+
+    }
+
+    @Transactional
+    public void copyTeachers(Long sourceYearId, Long targetYearId) {
+        SchoolYear targetYear = schoolYearService.getSchoolYearById(targetYearId);
+
+        List<Teacher> sourceTeachers =
+                teacherRepository.findBySchoolYearId(sourceYearId);
+
+        for (Teacher t : sourceTeachers) {
+
+            boolean exists = teacherRepository
+                    .existsByUserLoginEmailAndSchoolYearId(
+                            t.getUserLogin().getEmail(),
+                            targetYearId
+                    );
+
+            if (!exists) {
+                Teacher copy = new Teacher();
+                copy.setFirstName(t.getFirstName());
+                copy.setLastName(t.getLastName());
+                copy.setTitle(t.getTitle());
+                copy.setUserLogin(t.getUserLogin()); // isti login
+                copy.setSchoolYear(targetYear);
+
+                teacherRepository.save(copy);
+            }
+        }
+    }
+
+
+    @Transactional
+    public void copyDistributionsToYear(Long sourceYearId, Long targetYearId) {
+        SchoolYear targetYear = schoolYearService.getSchoolYearById(targetYearId);
+        List<Distribution> sourceDistributions = distributionRepository.findBySchoolYearId(sourceYearId);
+
+        for (Distribution dist : sourceDistributions) {
+
+            // --- Profesor ---
+            Teacher newTeacher = teacherRepository.findByEmailAndYear(
+                    dist.getTeacher().getUserLogin().getEmail(), targetYearId
+            ).orElseGet(() -> {
+                Teacher teacherCopy = new Teacher();
+                teacherCopy.setFirstName(dist.getTeacher().getFirstName());
+                teacherCopy.setLastName(dist.getTeacher().getLastName());
+                teacherCopy.setTitle(dist.getTeacher().getTitle());
+                teacherCopy.setUserLogin(dist.getTeacher().getUserLogin());
+                teacherCopy.setSchoolYear(targetYear); // obavezno setovati školsku godinu
+                return teacherRepository.save(teacherCopy);
+            });
+
+            // --- Predmet ---
+            Subject newSubject = subjectRepository.findByNameAndStudyProgramAndSemesterAndSchoolYearId(
+                    dist.getSubject().getName(), dist.getSubject().getStudyProgram(),dist.getSubject().getSemester(), targetYearId
+            ).orElseGet(() -> {
+                Subject subjectCopy = new Subject();
+                subjectCopy.setName(dist.getSubject().getName());
+                subjectCopy.setStudyProgram(dist.getSubject().getStudyProgram());
+                subjectCopy.setSemester(dist.getSubject().getSemester());
+                subjectCopy.setLectureHours(dist.getSubject().getLectureHours());
+                subjectCopy.setExerciseHours(dist.getSubject().getExerciseHours());
+                subjectCopy.setPracticumHours(dist.getSubject().getPracticumHours());
+                subjectCopy.setMandatory(dist.getSubject().getMandatory());
+                subjectCopy.setLectureSessions(dist.getSubject().getLectureSessions());
+                subjectCopy.setExerciseSessions(dist.getSubject().getExerciseSessions());
+                subjectCopy.setSchoolYear(targetYear); // vežemo za ciljnu godinu
+                return subjectRepository.save(subjectCopy);
+            });
+
+            // --- Kreiranje nove raspodele ---
+//            boolean exists = distributionRepository.existsByTeacherIdAndSubjectIdAndSchoolYearAndClassType(newTeacher.getId(), newSubject.getId(), targetYear, dist.getClassType());
+//            if (!exists) {
+            Distribution copy = new Distribution();
+            copy.setTeacher(newTeacher);
+            copy.setSubject(newSubject);
+            copy.setClassType(dist.getClassType());
+            copy.setSessionCount(dist.getSessionCount());
+            copy.setSchoolYear(targetYear);
+            distributionRepository.save(copy);
+//            } else {
+//                System.out.println("Treba ovde da udjem 2 puta");
+//            }
+        }
+    }
+
+//    @Transactional
+//    public void copyDistributionsToYear(Long sourceYearId, Long targetYearId) {
+//        SchoolYear targetYear = schoolYearService.getSchoolYearById(targetYearId);
+//        List<Distribution> sourceDistributions = distributionRepository.findBySchoolYearId(sourceYearId);
+//
+//        // Napravi mapu profesora i predmeta koji su već kopirani
+//        Map<String, Teacher> teachersMap = teacherRepository.findBySchoolYearId(targetYearId)
+//                .stream()
+//                .collect(Collectors.toMap(t -> t.getUserLogin().getEmail(), t -> t));
+//
+//        Map<String, Subject> subjectsMap = subjectRepository.findBySchoolYearId(targetYearId)
+//                .stream()
+//                .collect(Collectors.toMap(s -> s.getName() + "|" + s.getStudyProgram(), s -> s));
+//
+//        for (Distribution dist : sourceDistributions) {
+//            // Profesor
+//            Teacher targetTeacher = teachersMap.computeIfAbsent(
+//                    dist.getTeacher().getUserLogin().getEmail(),
+//                    email -> {
+//                        Teacher copy = new Teacher();
+//                        copy.setFirstName(dist.getTeacher().getFirstName());
+//                        copy.setLastName(dist.getTeacher().getLastName());
+//                        copy.setTitle(dist.getTeacher().getTitle());
+//                        copy.setUserLogin(dist.getTeacher().getUserLogin());
+//                        copy.setSchoolYear(targetYear);
+//                        return teacherRepository.save(copy);
+//                    });
+//
+//            // Predmet
+//            String subjectKey = dist.getSubject().getName() + "|" + dist.getSubject().getStudyProgram();
+//            Subject targetSubject = subjectsMap.computeIfAbsent(
+//                    subjectKey,
+//                    key -> {
+//                        Subject copy = new Subject();
+//                        copy.setName(dist.getSubject().getName());
+//                        copy.setStudyProgram(dist.getSubject().getStudyProgram());
+//                        copy.setSemester(dist.getSubject().getSemester());
+//                        copy.setLectureHours(dist.getSubject().getLectureHours());
+//                        copy.setExerciseHours(dist.getSubject().getExerciseHours());
+//                        copy.setPracticumHours(dist.getSubject().getPracticumHours());
+//                        copy.setMandatory(dist.getSubject().getMandatory());
+//                        copy.setLectureSessions(dist.getSubject().getLectureSessions());
+//                        copy.setExerciseSessions(dist.getSubject().getExerciseSessions());
+//                        copy.setSchoolYear(targetYear);
+//                        return subjectRepository.save(copy);
+//                    });
+//
+//            // Kreiranje nove raspodele
+//            Distribution copy = new Distribution();
+//            copy.setTeacher(targetTeacher);
+//            copy.setSubject(targetSubject);
+//            copy.setClassType(dist.getClassType());
+//            copy.setSessionCount(dist.getSessionCount());
+//            copy.setSchoolYear(targetYear);
+//
+//            distributionRepository.save(copy);
+//        }
+//    }
+
+
+
+
+    @Transactional
+    public void copyDistributions(Long sourceYearId, Long targetYearId) {
+        SchoolYear targetYear = schoolYearService.getSchoolYearById(targetYearId);
+
+        List<Distribution> sourceDistributions =
+                distributionRepository.findBySchoolYearId(sourceYearId);
+
+        for (Distribution d : sourceDistributions) {
+
+            Teacher targetTeacher =
+                    teacherRepository.findByUserLoginEmailAndSchoolYearId(
+                            d.getTeacher().getUserLogin().getEmail(),
+                            targetYearId
+                    ).orElseThrow(() ->
+                            new RuntimeException("Profesor ne postoji u ciljnoj godini"));
+
+            Subject targetSubject =
+                    subjectRepository.findByNameAndStudyProgramAndSchoolYearId(
+                            d.getSubject().getName(),
+                            d.getSubject().getStudyProgram(),
+                            targetYearId
+                    ).orElseThrow(() ->
+                            new RuntimeException("Predmet ne postoji u ciljnoj godini"));
+
+            Distribution copy = new Distribution();
+            copy.setTeacher(targetTeacher);
+            copy.setSubject(targetSubject);
+            copy.setClassType(d.getClassType());
+            copy.setSessionCount(d.getSessionCount());
+            copy.setSchoolYear(targetYear);
+
+            distributionRepository.save(copy);
+        }
+    }
+
+
+    @Transactional
+    public void copyWholeSchoolYear(Long sourceYearId, Long targetYearId) {
+        copySubjects(sourceYearId, targetYearId);
+        copyTeachers(sourceYearId, targetYearId);
+        copyDistributions(sourceYearId, targetYearId);
+    }
+
+
 }

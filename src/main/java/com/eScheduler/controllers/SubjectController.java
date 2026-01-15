@@ -28,7 +28,6 @@ public class SubjectController {
     @GetMapping
     @Operation(summary = "Get all subjects", description = "Retrieve a list of all subjects")
     public ResponseEntity<List<SubjectDTO>> getAllSubjects() {
-        System.out.println("Hello Aleksadnar from Backend");
         List<SubjectDTO> subjects = subjectService.getSubjects();
         return ResponseEntity.status(HttpStatus.OK).body(subjects);
     }
@@ -56,4 +55,11 @@ public class SubjectController {
         SubjectDTO updatedSubject = subjectService.updateSubject(subject);
         return ResponseEntity.status(HttpStatus.OK).body(updatedSubject);
     }
+
+
+    @GetMapping("/school-year/{id}")
+    public List<SubjectDTO> getSubjectsBySchoolYear(@PathVariable("id") Long id){
+        return subjectService.findBySchoolYearId(id);
+    }
+
 }

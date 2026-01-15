@@ -1,11 +1,9 @@
 package com.eScheduler.repositories;
 
-import com.eScheduler.model.Distribution;
-import com.eScheduler.model.Subject;
-import com.eScheduler.model.Teacher;
-import com.eScheduler.model.UserLogin;
+import com.eScheduler.model.*;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.stereotype.Repository;
 
@@ -32,6 +30,12 @@ public interface DistributionRepository extends JpaRepository<Distribution, Long
 
     @Query("SELECT s FROM Subject s WHERE s.name = ?1 AND s.studyProgram = ?2 AND s.semester = ?3")
     Subject findBySubjectNameStudyProgramSemester(String name, String studyProgram, String semester);
+
+    @Query("SELECT d FROM Distribution d WHERE d.schoolYear.id = :schoolYearId")
+    List<Distribution> findBySchoolYearId(@Param("schoolYearId") Long schoolYearId);
+
+    boolean existsByTeacherIdAndSubjectIdAndSchoolYearAndClassType(Long teacherId, Long subjectId, SchoolYear schoolYear, String classType);
+
 
 }
 

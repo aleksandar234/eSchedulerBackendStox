@@ -5,6 +5,7 @@ import com.eScheduler.model.UserLogin;
 import com.eScheduler.responses.customDTOClasses.TeacherDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.stereotype.Repository;
 
@@ -24,5 +25,31 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
     List<Teacher> findByType(String type);
 
     Optional<Teacher> findByUserLoginEmail(String email);
+
+    @Query("SELECT t FROM Teacher t WHERE t.schoolYear.id = :schoolYearId")
+    List<Teacher> findBySchoolYearId(@Param("schoolYearId") Long schoolYearId);
+
+
+    @Query("SELECT t FROM Teacher t WHERE t.firstName = :firstName AND t.schoolYear.id = :schoolYearId")
+    Optional<Teacher> findByNameAndYear(@Param("firstName") String firstName, @Param("schoolYearId") Long schoolYearId);
+
+    @Query("SELECT t FROM Teacher t WHERE t.userLogin.email = :email AND t.schoolYear.id = :schoolYearId")
+    Optional<Teacher> findByEmailAndYear(@Param("email") String email, @Param("schoolYearId") Long schoolYearId);
+
+
+    @Query("SELECT t FROM Teacher t WHERE t.schoolYear.active = true")
+    List<Teacher> findAllByActiveSchoolYear();
+
+    @Query("SELECT CASE WHEN COUNT(t) > 0 THEN true ELSE false END " +
+            "FROM Teacher t " +
+            "WHERE t.userLogin.email = :email " +
+            "AND t.schoolYear.id = :schoolYearId")
+    boolean existsByUserLoginEmailAndSchoolYearId(
+            @Param("email") String email,
+            @Param("schoolYearId") Long schoolYearId);
+
+    Optional<Teacher> findByUserLoginEmailAndSchoolYearId(String email, Long schoolYearId);
+
+
 
 }
