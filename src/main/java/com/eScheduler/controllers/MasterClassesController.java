@@ -28,6 +28,11 @@ public class MasterClassesController {
         return service.getMasterPredmetiZaNastavnika(nastavnikId);
     }
 
+    @GetMapping("/{nastavnikId}/doktorske")
+    public List<MasterClassDTO> getDoktorskePredmeteZaNastavnika(@PathVariable("nastavnikId") Long nastavnikId) {
+        return service.getDoktorskiPredmetiZaNastavnika(nastavnikId);
+    }
+
 
     // POST: dodavanje nove aktivnosti
     @PostMapping
@@ -35,5 +40,9 @@ public class MasterClassesController {
         System.out.println("Prosledjeno sa fonta:" + masterPredmet);
         return service.save(masterPredmet);
     }
+
+    // Dodavanje u tabelu za komisiju/mentora
+//    @PostMapping("/{nastavnikId}/commision-mentor")
+
 
 }

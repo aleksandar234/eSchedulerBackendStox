@@ -19,8 +19,8 @@ public class MasterClasses {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "predmet_na_master_studijama", nullable = false)
-    private String predmetNaMasterStudijama;
+    @Column(name = "predmet_postakademskim_studijama", nullable = false)
+    private String predmetNaPostakademskimStudijama;
 
     @Column(name = "odrzano_casova", nullable = false)
     private Integer odrzanoCasova;
@@ -33,5 +33,11 @@ public class MasterClasses {
 
     @Column(name = "nastavnik_id", nullable = false)
     private Long nastavnikId;
+
+    @Column(name = "stepenStudija", nullable = false)
+    private String stepenStudija;
+
+    @Column(name = "napomena", nullable = true)
+    private String napomena;
 
 }
