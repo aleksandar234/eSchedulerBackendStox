@@ -10,4 +10,6 @@ public interface CommissionMentorRepository extends JpaRepository<CommissionMent
 
     List<CommissionMentor> findByNastavnikIdOrderByDatumUnosaDesc(Long nastavnikId);
 
+    List<CommissionMentor> findBySkolskaGodinaId(Long skolskaGodinaId);
+
 }

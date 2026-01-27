@@ -42,6 +42,9 @@ public class CommissionMentor {
     @Column(name = "nastavnik_id", nullable = false)
     private Long nastavnikId;
 
+    @Column(name = "id_skolska_godina", nullable = false)
+    private Long skolskaGodinaId;
+
 
 
 

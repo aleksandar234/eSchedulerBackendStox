@@ -3,6 +3,7 @@ package com.eScheduler.controllers;
 
 import com.eScheduler.model.MasterClasses;
 import com.eScheduler.responses.customDTOClasses.MasterClassDTO;
+import com.eScheduler.responses.customDTOClasses.MasterDoctoralClassSYDTO;
 import com.eScheduler.services.MasterClassesService;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.web.bind.annotation.*;
@@ -33,6 +34,10 @@ public class MasterClassesController {
         return service.getDoktorskiPredmetiZaNastavnika(nastavnikId);
     }
 
+    @GetMapping("/{skolskaGodinaId}/master-doktorske")
+    public List<MasterDoctoralClassSYDTO> getMasterDoktorskePredmeteZaSkolskugodinu(@PathVariable("skolskaGodinaId") Long skolskaGodinaId) {
+        return service.getMasterDoktorskiPredmetiPoSkolskojGodini(skolskaGodinaId);
+    }
 
     // POST: dodavanje nove aktivnosti
     @PostMapping
@@ -41,8 +46,7 @@ public class MasterClassesController {
         return service.save(masterPredmet);
     }
 
-    // Dodavanje u tabelu za komisiju/mentora
-//    @PostMapping("/{nastavnikId}/commision-mentor")
+
 
 
 }

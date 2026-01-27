@@ -10,5 +10,6 @@ public interface MasterClassesRepository extends JpaRepository<MasterClasses, Lo
     // GET po nastavniku
     List<MasterClasses> findByNastavnikIdOrderByDatumUnosaDesc(Long nastavnikId);
 
+    List<MasterClasses> findBySkolskaGodinaId(Long skolskaGodinaId);
 
 }

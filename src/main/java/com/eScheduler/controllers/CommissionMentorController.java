@@ -27,6 +27,13 @@ public class CommissionMentorController {
         return service.getMentorKomisija(nastavnikId);
     }
 
+    @GetMapping("/{skolskaGodinaId}/SY")
+    public List<CommissionMentorDTO> getMentorKomisijuZaSkolskugodinu(@PathVariable("skolskaGodinaId") Long skolskaGodinaId) {
+        // poziva servis koji vraća listu DTO objekata
+        return service.getMentorKomisijaZaSkolskuGodinu(skolskaGodinaId);
+    }
+
+
     @PostMapping
     public CommissionMentor dodajKomisijuMentora(@RequestBody CommissionMentor obj) {
         System.out.println("Prosledjeno sa fonta:" + obj);

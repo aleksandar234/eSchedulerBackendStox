@@ -40,4 +40,6 @@ public class MasterClasses {
     @Column(name = "napomena", nullable = true)
     private String napomena;
 
+    @Column(name = "id_skolska_godina", nullable = false)
+    private Long skolskaGodinaId;
 }

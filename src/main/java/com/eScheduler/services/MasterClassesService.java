@@ -3,6 +3,7 @@ package com.eScheduler.services;
 import com.eScheduler.model.MasterClasses;
 import com.eScheduler.repositories.MasterClassesRepository;
 import com.eScheduler.responses.customDTOClasses.MasterClassDTO;
+import com.eScheduler.responses.customDTOClasses.MasterDoctoralClassSYDTO;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -45,6 +46,23 @@ public class MasterClassesService {
                         mp.getDatumOdrzavanjaCasova(),
                         mp.getDatumUnosa(),
                         mp.getNapomena()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    public List<MasterDoctoralClassSYDTO> getMasterDoktorskiPredmetiPoSkolskojGodini(Long skolskaGodinaId) {
+        return repository.findBySkolskaGodinaId(skolskaGodinaId)
+                .stream()
+                .map(mp -> new MasterDoctoralClassSYDTO(
+                        mp.getId(),
+                        mp.getPredmetNaPostakademskimStudijama(),
+                        mp.getOdrzanoCasova(),
+                        mp.getDatumOdrzavanjaCasova(),
+                        mp.getDatumUnosa(),
+                        mp.getNapomena(),
+                        mp.getSkolskaGodinaId(),
+                        mp.getStepenStudija(),
+                        mp.getNastavnikId()
                 ))
                 .collect(Collectors.toList());
     }

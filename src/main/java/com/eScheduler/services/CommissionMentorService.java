@@ -40,4 +40,19 @@ public class CommissionMentorService {
                 ))
                 .collect(Collectors.toList());
     }
+
+    public List<CommissionMentorDTO> getMentorKomisijaZaSkolskuGodinu(Long skolksaGodinaId) {
+        return repository.findBySkolskaGodinaId(skolksaGodinaId)
+                .stream()
+                .map(mp -> new CommissionMentorDTO(
+                        mp.getId(),
+                        mp.getType(),
+                        mp.getDegree(),
+                        mp.getStudentName(),
+                        mp.getTopic(),
+                        mp.getNote(),
+                        mp.getDatumUnosa()
+                ))
+                .collect(Collectors.toList());
+    }
 }
