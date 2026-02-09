@@ -2,10 +2,12 @@ package com.eScheduler.repositories;
 
 import com.eScheduler.model.*;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -35,6 +37,12 @@ public interface DistributionRepository extends JpaRepository<Distribution, Long
     List<Distribution> findBySchoolYearId(@Param("schoolYearId") Long schoolYearId);
 
     boolean existsByTeacherIdAndSubjectIdAndSchoolYearAndClassType(Long teacherId, Long subjectId, SchoolYear schoolYear, String classType);
+
+
+    @Modifying
+    @Transactional
+    @Query("delete from Distribution d where d.schoolYear.id = :yearId")
+    void deleteBySchoolYearId(@Param("yearId") Long yearId);
 
 
 }

@@ -9,6 +9,7 @@ import com.eScheduler.responses.customDTOClasses.DistributionDTO;
 import com.eScheduler.responses.customDTOClasses.SchoolYearDTO;
 import com.eScheduler.responses.customDTOClasses.StandardUserDTO;
 import com.eScheduler.services.DistributionService;
+import com.eScheduler.services.SchoolYearService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -33,11 +34,13 @@ import java.util.Map;
 public class DistributionController {
     private final DistributionService distributionService;
     private final SchoolYearRepository schoolYearRepository;
+    private final SchoolYearService schoolYearService;
 
     @Autowired
-    public DistributionController(DistributionService distributionService, SchoolYearRepository schoolYearRepository) {
+    public DistributionController(DistributionService distributionService, SchoolYearRepository schoolYearRepository, SchoolYearService schoolYearService) {
         this.distributionService = distributionService;
         this.schoolYearRepository = schoolYearRepository;
+        this.schoolYearService = schoolYearService;
     }
 
     @GetMapping
@@ -96,6 +99,9 @@ public class DistributionController {
     @Transactional
     @PostMapping("/copy")
     public ResponseEntity<SchoolYear> copyDistributionsToYear(@RequestBody CopySchoolYearDTO copySchoolYearDTO) {
+
+
+
         Long sourceYearId = copySchoolYearDTO.getSourceYearId();
         Long targetYearId = copySchoolYearDTO.getTargetYearId();
         String targetYearLabel = copySchoolYearDTO.getOznaka();
@@ -148,11 +154,15 @@ public class DistributionController {
         Long targetId = savedYear.getId();
 
 
+
         // to je manje vise jedna linija koda, ali i sutra cu da istesitiram sta mi treba, pa mi ostaje da se zezam na frontu da
         // oznacim nekako koja je godina aktivna i da ne dam neku vrstu mlitave barijere da ako korisnik zeli da menja ne aktivne godine, tj prethodne
         // nije nuzno da su neaktivne, samo one sa manjom lable oznakom da mu tu dam kao neki vid restrikcije
 
         distributionService.copyDistributionsToYear(sourceYearId, targetId);
+//        schoolYearService.createSchoolYear();
+
+
         return ResponseEntity.ok(copiedSchoolYear);
     }
 

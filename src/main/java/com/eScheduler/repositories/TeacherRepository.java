@@ -4,10 +4,12 @@ import com.eScheduler.model.Teacher;
 import com.eScheduler.model.UserLogin;
 import com.eScheduler.responses.customDTOClasses.TeacherDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -51,5 +53,9 @@ public interface TeacherRepository extends JpaRepository<Teacher, Long> {
     Optional<Teacher> findByUserLoginEmailAndSchoolYearId(String email, Long schoolYearId);
 
 
+    @Modifying
+    @Transactional
+    @Query("delete from Teacher t where t.schoolYear.id = :yearId")
+    void deleteBySchoolYearId(@Param("yearId") Long yearId);
 
 }

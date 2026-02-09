@@ -20,6 +20,8 @@ public interface SchoolYearRepository extends JpaRepository<SchoolYear, Long> {
 
     Optional<SchoolYear> findByActiveTrue();
 
+    Optional<SchoolYear> findFirstByOrderByIdAsc();
+
 
     List<SchoolYear> findAll();
 
@@ -29,4 +31,8 @@ public interface SchoolYearRepository extends JpaRepository<SchoolYear, Long> {
     @Transactional
     @Query("UPDATE SchoolYear s SET s.active = false WHERE s.active = true")
     void deactivatePreviousYear();
+
+    @Modifying
+    @Query("UPDATE SchoolYear s SET s.active = false WHERE s.active = true")
+    void deactivateAll();
 }

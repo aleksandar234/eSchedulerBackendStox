@@ -3,10 +3,12 @@ package com.eScheduler.repositories;
 import com.eScheduler.model.Subject;
 import com.eScheduler.responses.customDTOClasses.SubjectDTO;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.data.rest.core.annotation.RepositoryRestResource;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -48,6 +50,11 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
             Integer semester,
             Long schoolYearId
     );
+
+    @Modifying
+    @Transactional
+    @Query("delete from Subject s where s.schoolYear.id = :yearId")
+    void deleteBySchoolYearId(@Param("yearId") Long yearId);
 
 
 }

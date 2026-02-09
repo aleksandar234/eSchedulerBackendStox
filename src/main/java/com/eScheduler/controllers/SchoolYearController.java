@@ -54,7 +54,7 @@ public class SchoolYearController {
         System.out.println("Aktivna:" + schoolYearDTO.isAktivna());
         newYear.setLabel(schoolYearDTO.getOznaka());
         newYear.setStartDate(schoolYearDTO.getDatum_pocetka());
-        newYear.setEndDate(schoolYearDTO.getDatum_pocetka());
+        newYear.setEndDate(schoolYearDTO.getDatum_zavrsetka());
         newYear.setActive(schoolYearDTO.isAktivna());
 
         if(newYear.isActive()) {
@@ -64,6 +64,22 @@ public class SchoolYearController {
 
         return schoolYearRepository.save(newYear);
 
+    }
+
+    @PostMapping("/activateSelectedYear")
+    public ResponseEntity<SchoolYear> activateSelectedYear(@RequestBody SchoolYear year) {
+        if (year == null || year.getId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        SchoolYear updatedYear = schoolYearService.activateYearAndDeactivateOthers(year.getId());
+        return ResponseEntity.ok(updatedYear);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteSchoolYear(@PathVariable Long id) {
+        schoolYearService.removeSelectedYear(id);
+        return ResponseEntity.noContent().build(); // 204
     }
 
 
