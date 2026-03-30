@@ -57,7 +57,7 @@ public class DistributionController {
             @RequestParam String studyProgram,
             @RequestParam String semester) {
 
-        DistributionDTO savedDistribution = distributionService.addNewDistribution(distribution, studyProgram, semester);
+        DistributionDTO savedDistribution = distributionService.addNewDistribution(distribution, studyProgram, Integer.valueOf(semester));
         return ResponseEntity.status(HttpStatus.CREATED).body(savedDistribution);
     }
 

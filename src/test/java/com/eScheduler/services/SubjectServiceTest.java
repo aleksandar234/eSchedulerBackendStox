@@ -30,18 +30,32 @@ class SubjectServiceTest {
         MockitoAnnotations.openMocks(this);
     }
 
+    private Subject createSubject(Long id, String name) {
+        Subject subject = new Subject();  // default konstruktor
+        subject.setId(id);
+        subject.setName(name);
+        subject.setStudyProgram("RN");
+        subject.setSemester(2);
+        subject.setLectureHours(2);
+        subject.setExerciseHours(2);
+        subject.setPracticumHours(2);
+        subject.setMandatory("obavezni");
+        subject.setLectureSessions(2);
+        subject.setExerciseSessions(2);
+//        subject.setTeacher(null); // ili postavi stvarnog Teacher objekta ako je potreban
+        return subject;
+    }
+
     @Test
     void getSubjects_returnsListOfSubjectDTOs() {
-        // Arrange
         List<Subject> subjects = List.of(
-                new Subject(1L,"OOP", "RN",2,2,2,2,"obavezni",2,2,null),
-                new Subject(1L,"NMA", "RN",2,2,2,2,"izborni",2,2,null));
+                createSubject(1L,"OOP"),
+                createSubject(2L,"NMA")
+        );
         when(subjectRepository.findAll()).thenReturn(subjects);
 
-        // Act
         List<SubjectDTO> result = subjectService.getSubjects();
 
-        // Assert
         assertEquals(2, result.size());
         assertEquals("OOP", result.get(0).getName());
         assertEquals("NMA", result.get(1).getName());
@@ -49,74 +63,58 @@ class SubjectServiceTest {
 
     @Test
     void addNewSubject_savesAndReturnsSubjectDTO() {
-        // Arrange
-        Subject subject = new Subject(1L,"OOP", "RN",2,2,2,2,"obavezni",2,2,null);
-        when(subjectRepository.findById(subject.getId())).thenReturn(Optional.empty());
+        Subject subject = createSubject(null,"OOP");
         when(subjectRepository.findByName(subject.getName())).thenReturn(Optional.empty());
-        when(subjectRepository.save(subject)).thenReturn(subject);
+        when(subjectRepository.save(subject)).thenReturn(createSubject(1L,"OOP"));
 
-        // Act
         SubjectDTO result = subjectService.addNewSubject(subject);
 
-        // Assert
         assertEquals("OOP", result.getName());
+        assertEquals(1L, result.getId());
     }
 
     @Test
     void addNewSubject_throwsConflictException_whenSubjectExists() {
-        // Arrange
-        Subject subject = new Subject(1L,"OOP", "RN",2,2,2,2,"obavezni",2,2,null);
+        Subject subject = createSubject(1L,"OOP");
         when(subjectRepository.findByName(subject.getName())).thenReturn(Optional.of(subject));
 
-        // Act & Assert
         assertThrows(ConflictException.class, () -> subjectService.addNewSubject(subject));
     }
 
     @Test
     void deleteSubjectById_deletesSubject() {
-        // Arrange
-        Long subjectId = 1L;
-        Subject subject = new Subject(subjectId,"OOP", "RN",2,2,2,2,"obavezni",2,2,null);
-        when(subjectRepository.findById(subjectId)).thenReturn(Optional.of(subject));
+        Subject subject = createSubject(1L,"OOP");
+        when(subjectRepository.findById(subject.getId())).thenReturn(Optional.of(subject));
 
-        // Act
-        subjectService.deleteSubjectById(subjectId);
+        subjectService.deleteSubjectById(subject.getId());
 
-        // Assert
-        verify(subjectRepository, times(1)).deleteById(subjectId);
+        verify(subjectRepository, times(1)).deleteById(subject.getId());
     }
 
     @Test
     void deleteSubjectById_throwsNotFoundException_whenSubjectNotFound() {
-        // Arrange
-        Long subjectId = 1L;
-        when(subjectRepository.findById(subjectId)).thenReturn(Optional.empty());
-
-        // Act & Assert
-        assertThrows(NotFoundException.class, () -> subjectService.deleteSubjectById(subjectId));
+        when(subjectRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThrows(NotFoundException.class, () -> subjectService.deleteSubjectById(1L));
     }
 
     @Test
     void updateSubject_updatesAndReturnsSubjectDTO() {
-        // Arrange
-        Subject subject = new Subject(1L,"OOP", "RN",2,2,2,2,"obavezni",2,2,null);
-        Subject updatedSubject = new Subject(1L,"NMA", "RN",2,2,2,2,"obavezni",2,2,null);
-        when(subjectRepository.findById(subject.getId())).thenReturn(Optional.of(subject));
+        Subject oldSubject = createSubject(1L,"OOP");
+        Subject updatedSubject = createSubject(1L,"NMA");
+        when(subjectRepository.findById(oldSubject.getId())).thenReturn(Optional.of(oldSubject));
+        when(subjectRepository.save(oldSubject)).thenReturn(updatedSubject);
 
-        // Act
         SubjectDTO result = subjectService.updateSubject(updatedSubject);
 
-        // Assert
         assertEquals("NMA", result.getName());
+        assertEquals(1L, result.getId());
     }
 
     @Test
     void updateSubject_throwsNotFoundException_whenSubjectNotFound() {
-        // Arrange
-        Subject subject = new Subject(1L,"OOP", "RN",2,2,2,2,"obavezni",2,2,null);
+        Subject subject = createSubject(1L,"OOP");
         when(subjectRepository.findById(subject.getId())).thenReturn(Optional.empty());
 
-        // Act & Assert
         assertThrows(NotFoundException.class, () -> subjectService.updateSubject(subject));
     }
 }

@@ -68,11 +68,18 @@ public class DistributionService {
         return standardUserDTOS;
     }
 
-    public DistributionDTO addNewDistribution(DistributionRequestDTO distribution,String studyProgram, String semester){
-        Subject subject = distributionRepository.findBySubjectNameStudyProgramSemester(distribution.getSubject(),studyProgram,semester);
+    public DistributionDTO addNewDistribution(DistributionRequestDTO distribution,String studyProgram, Integer semester){
+        System.out.println("Distribucija DTO subject: " + distribution.getSubject());
+        System.out.println("Study program: " + studyProgram);
+        System.out.println("Semester: " + semester);
+        Subject subject = subjectRepository.findBySubjectNameStudyProgramSemester(
+                distribution.getSubject(), studyProgram, semester);
+
+        System.out.println("Pronadjeni predmet: " + (subject != null ? subject.getName() : "null"));
         List<Distribution> distributionsWithSameSubject = distributionRepository.findBySubject(subject,distribution.getClassType());
 
         Teacher teacher = distributionRepository.findByTeacherEmail(distribution.getTeacher());
+        System.out.println("Pronadjeni profesor: " + (teacher != null ? teacher.getFirstName() + " " + teacher.getLastName() : "null"));
         if (subject == null || teacher == null) {
             throw new ConflictException("Raspodela sa tim predmetom ili nastavnikom ne postoji");
         }else{
@@ -221,7 +228,7 @@ public class DistributionService {
     }
 
     public DistributionDTO addNewDistribution(DistributionRequestDTO dto) {
-        return addNewDistribution(dto, dto.getSubject(), dto.getClassType());
+        return addNewDistribution(dto, dto.getStudyProgram(), dto.getSemestar());
     }
 
 

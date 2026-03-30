@@ -31,7 +31,7 @@ public interface DistributionRepository extends JpaRepository<Distribution, Long
     List<Distribution> getDistributionByTeacherEmail(String email);
 
     @Query("SELECT s FROM Subject s WHERE s.name = ?1 AND s.studyProgram = ?2 AND s.semester = ?3")
-    Subject findBySubjectNameStudyProgramSemester(String name, String studyProgram, String semester);
+    Subject findBySubjectNameStudyProgramSemester(String name, String studyProgram, Integer semester);
 
     @Query("SELECT d FROM Distribution d WHERE d.schoolYear.id = :schoolYearId")
     List<Distribution> findBySchoolYearId(@Param("schoolYearId") Long schoolYearId);

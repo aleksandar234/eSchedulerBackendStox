@@ -31,9 +31,31 @@ class SubjectControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
+        // Kreiramo prvi predmet
+        Subject matematika = new Subject();
+        matematika.setName("Matematika");
+        matematika.setStudyProgram("RN");
+        matematika.setSemester(1);
+        matematika.setLectureHours(3);
+        matematika.setExerciseHours(2);
+        matematika.setPracticumHours(1);
+        matematika.setMandatory("obavezan");
+        matematika.setLectureSessions(15);
+        matematika.setExerciseSessions(10);
+        subjectService.addNewSubject(matematika);
 
-            subjectService.addNewSubject(new Subject(null, "Matematika", "RN", 1, 3, 2, 1, "obavezan", 15, 10, null));
-            subjectService.addNewSubject(new Subject(null, "Programiranje", "RN", 2, 4, 2, 0, "izbroni", 16, 8, null));
+        // Kreiramo drugi predmet
+        Subject programiranje = new Subject();
+        programiranje.setName("Programiranje");
+        programiranje.setStudyProgram("RN");
+        programiranje.setSemester(2);
+        programiranje.setLectureHours(4);
+        programiranje.setExerciseHours(2);
+        programiranje.setPracticumHours(0);
+        programiranje.setMandatory("izborni");
+        programiranje.setLectureSessions(16);
+        programiranje.setExerciseSessions(8);
+        subjectService.addNewSubject(programiranje);
     }
 
     @Test
@@ -120,5 +142,4 @@ class SubjectControllerIntegrationTest {
                 .andExpect(jsonPath("$.practicumHours", is(1)))
                 .andExpect(jsonPath("$.mandatory", is("obavezan")));
     }
-
 }

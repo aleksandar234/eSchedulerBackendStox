@@ -18,7 +18,7 @@ public class TestDataProvider {
         teacher.setLastName("Markovic");
         teacher.setTitle("nastavnik");
         teacher.setUserLogin(userLogin);
-        userLogin.setTeacher(teacher);
+//        userLogin.setTeacher(teacher);
 
         return teacher;
     }
@@ -36,7 +36,7 @@ public class TestDataProvider {
         teacher.setLastName("Anic");
         teacher.setTitle("saradnik");
         teacher.setUserLogin(userLogin);
-        userLogin.setTeacher(teacher);
+//        userLogin.setTeacher(teacher);
 
         return teacher;
     }

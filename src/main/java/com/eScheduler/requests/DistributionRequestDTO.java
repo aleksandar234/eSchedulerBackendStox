@@ -13,4 +13,6 @@ public class DistributionRequestDTO {
     private String subject;
     private String classType;
     private Integer sessionCount;
+    private String studyProgram;
+    private Integer semestar;
 }

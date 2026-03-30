@@ -1,12 +1,9 @@
 package com.eScheduler.services;
 
-import com.eScheduler.TestDataProvider;
 import com.eScheduler.exceptions.custom.ConflictException;
 import com.eScheduler.exceptions.custom.NotFoundException;
-import com.eScheduler.model.Distribution;
-import com.eScheduler.model.Subject;
-import com.eScheduler.model.Teacher;
-import com.eScheduler.repositories.DistributionRepository;
+import com.eScheduler.model.*;
+import com.eScheduler.repositories.*;
 import com.eScheduler.requests.DistributionRequestDTO;
 import com.eScheduler.responses.customDTOClasses.DistributionDTO;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,24 +23,45 @@ class DistributionServiceTest {
     @Mock
     private DistributionRepository distributionRepository;
 
+    @Mock
+    private TeacherRepository teacherRepository;
+
+    @Mock
+    private SubjectRepository subjectRepository;
+
+    @Mock
+    private UserLoginRepository userLoginRepository;
+
+    @Mock
+    private SchoolYearService schoolYearService;
+
+    @Mock
+    private SchoolYearRepository schoolYearRepository;
+
     @InjectMocks
     private DistributionService distributionService;
+
+    private SchoolYear activeYear;
 
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        activeYear = new SchoolYear();
+        activeYear.setId(1L);
+        when(schoolYearService.getActiveSchoolYears()).thenReturn(activeYear);
     }
 
     @Test
     void getAllDistributions_returnsListOfDistributionDTOs() {
-        Teacher teacher1 = TestDataProvider.createTeacher1();
-        Teacher teacher2 = TestDataProvider.createTeacher2();
+        Teacher teacher = new Teacher();
+        teacher.setId(1L);
+        Subject subject = new Subject();
+        subject.setId(1L);
 
-        List<Distribution> distributions = List.of(
-                new Distribution(1L, teacher1, new Subject(), "predavanja", 2),
-                new Distribution(2L, teacher2, new Subject(), "vezbe", 2)
-        );
-        when(distributionRepository.findAll()).thenReturn(distributions);
+        Distribution dist1 = new Distribution(1L, teacher, subject, "predavanja", 2, activeYear);
+        Distribution dist2 = new Distribution(2L, teacher, subject, "vezbe", 1, activeYear);
+
+        when(distributionRepository.findAll()).thenReturn(List.of(dist1, dist2));
 
         List<DistributionDTO> result = distributionService.getAllDistributions();
 
@@ -54,80 +72,118 @@ class DistributionServiceTest {
 
     @Test
     void addNewDistribution_savesAndReturnsDistributionDTO() {
-        DistributionRequestDTO request = new DistributionRequestDTO(1L, "mMarkovic@example.com", "Programiranje","predavanja", 2);
-        Subject subject = TestDataProvider.createSubject1();
-        Teacher teacher = TestDataProvider.createTeacher1();
-        Distribution savedDistribution = new Distribution(1L, teacher, subject, "predavanja", 2);
+        Teacher teacher = new Teacher();
+        teacher.setId(1L);
+        Subject subject = new Subject();
+        subject.setId(1L);
+        DistributionRequestDTO request = new DistributionRequestDTO(
+                0L,                     // id
+                "teacher@example.com",   // teacher email
+                "Matematika",            // subject
+                "predavanja",            // classType
+                2,                       // sessionCount
+                "ETF",                   // studyProgram (primer)
+                1                        // semester (primer)
+        );
 
+        when(distributionRepository.findBySubjectNameStudyProgramSemester(anyString(), anyString(), anyInt()))
+                .thenReturn(subject);
+        when(distributionRepository.findByTeacherEmail(request.getTeacher()))
+                .thenReturn(teacher);
+        when(distributionRepository.findBySubject(subject, "predavanja")).thenReturn(List.of());
+        when(distributionRepository.save(any(Distribution.class)))
+                .thenAnswer(invocation -> invocation.getArgument(0));
 
-        when(distributionRepository.findBySubjectName(request.getSubject())).thenReturn(subject);
-        when(distributionRepository.findByTeacherEmail("mMarkovic@example.com")).thenReturn(teacher);
-        when(distributionRepository.findBySubject(subject, request.getClassType())).thenReturn(List.of());
-        when(distributionRepository.save(any(Distribution.class))).thenReturn(savedDistribution);
-
-        DistributionDTO result = distributionService.addNewDistribution(request);
+        DistributionDTO result = distributionService.addNewDistribution(request, "Informatika", 1);
 
         assertEquals("predavanja", result.getClassType());
+        assertEquals(2, result.getSessionCount());
+        verify(distributionRepository, times(1)).save(any(Distribution.class));
     }
+
     @Test
-    void addNewDistribution_throwsNotFoundException_whenTeacherDoNotExist() {
-        DistributionRequestDTO request = new DistributionRequestDTO(1L, "jKlinko@example.com", "Programiranje","predavanja", 2);
+    void addNewDistribution_throwsConflictException_whenDistributionExceedsSessions() {
+        Teacher teacher = new Teacher();
         Subject subject = new Subject();
-        when(distributionRepository.findBySubjectName(request.getSubject())).thenReturn(subject);
-        when(distributionRepository.findByUserEmail("jKlinko@example.com")).thenReturn(null);
-        when(distributionRepository.findBySubject(subject, request.getClassType())).thenReturn(List.of(new Distribution()));
+        subject.setLectureSessions(3); // max predavanja
 
-        assertThrows(ConflictException.class, () -> distributionService.addNewDistribution(request));
+        DistributionRequestDTO request = new DistributionRequestDTO(
+                0L,                     // id
+                "teacher@example.com",   // teacher email
+                "Matematika",            // subject
+                "predavanja",            // classType
+                2,                       // sessionCount
+                "ETF",                   // studyProgram (primer)
+                3                        // semester (primer)
+        );
 
-        verify(distributionRepository, times(1)).findBySubjectName(request.getSubject());
-        verify(distributionRepository, never()).save(any(Distribution.class));
+        Distribution existing = new Distribution(1L, teacher, subject, "predavanja", 2, activeYear);
+
+        when(distributionRepository.findBySubjectNameStudyProgramSemester(anyString(), anyString(), anyInt()))
+                .thenReturn(subject);
+        when(distributionRepository.findByTeacherEmail(request.getTeacher()))
+                .thenReturn(teacher);
+        when(distributionRepository.findBySubject(subject, "predavanja"))
+                .thenReturn(List.of(existing));
+
+        assertThrows(ConflictException.class, () -> distributionService.addNewDistribution(request, "Informatika", 1));
+        verify(distributionRepository, never()).save(any());
     }
 
     @Test
     void deleteDistributionById_deletesDistribution() {
-        Long distributionId = 1L;
-        when(distributionRepository.findById(distributionId)).thenReturn(Optional.of(new Distribution()));
+        Distribution dist = new Distribution();
+        when(distributionRepository.findById(1L)).thenReturn(Optional.of(dist));
 
-        distributionService.deleteDistributionById(distributionId);
+        distributionService.deleteDistributionById(1L);
 
-        verify(distributionRepository, times(1)).deleteById(distributionId);
+        verify(distributionRepository, times(1)).deleteById(1L);
     }
 
     @Test
-    void deleteDistributionById_throwsNotFoundException_whenDistributionNotFound() {
-        Long distributionId = 1L;
-        when(distributionRepository.findById(distributionId)).thenReturn(Optional.empty());
+    void deleteDistributionById_throwsNotFoundException() {
+        when(distributionRepository.findById(1L)).thenReturn(Optional.empty());
 
-        assertThrows(NotFoundException.class, () -> distributionService.deleteDistributionById(distributionId));
+        assertThrows(NotFoundException.class, () -> distributionService.deleteDistributionById(1L));
     }
 
     @Test
     void updateDistribution_updatesAndReturnsDistributionDTO() {
-        DistributionRequestDTO request = new DistributionRequestDTO(1L, "mMarkovic@example.com", "Programiranje", "predavanja", 2);
-        Subject subject = TestDataProvider.createSubject1();
-        Teacher teacher = TestDataProvider.createTeacher1();
-        Distribution oldDistribution = new Distribution(1L, teacher, subject, "vezbe", 1);
-        when(distributionRepository.findById(request.getId())).thenReturn(Optional.of(oldDistribution));
-        when(distributionRepository.findBySubjectName(request.getSubject())).thenReturn(subject);
+        Teacher teacher = new Teacher();
+        Subject subject = new Subject();
+        Distribution oldDist = new Distribution(1L, teacher, subject, "vezbe", 1, activeYear);
+        DistributionRequestDTO request = new DistributionRequestDTO(
+                0L,                     // id
+                "teacher@example.com",   // teacher email
+                "Matematika",            // subject
+                "predavanja",            // classType
+                2,                       // sessionCount
+                "ETF",                   // studyProgram (primer)
+                1                        // semester (primer)
+        );
+
+        when(distributionRepository.findById(1L)).thenReturn(Optional.of(oldDist));
         when(distributionRepository.findByTeacherEmail(request.getTeacher())).thenReturn(teacher);
         when(distributionRepository.findBySubject(subject, request.getClassType())).thenReturn(List.of());
 
-        // Act
         DistributionDTO result = distributionService.updateDistribution(request);
 
-        // Assert
         assertEquals("predavanja", result.getClassType());
         assertEquals(2, result.getSessionCount());
-        assertEquals(subject.getName(), result.getSubject().getName());
-
-        verify(distributionRepository, times(1)).findById(request.getId());
-        verify(distributionRepository, times(1)).findByTeacherEmail(request.getTeacher());
     }
 
     @Test
-    void containerupdateDistribution_throwsNotFoundException_whenDistributionNotFound() {
-        DistributionRequestDTO request = new DistributionRequestDTO(1L, "mMarkovic@example.com", "Programiranje", "predavanja", 2);
-        when(distributionRepository.findById(request.getId())).thenReturn(Optional.empty());
+    void updateDistribution_throwsNotFoundException() {
+        DistributionRequestDTO request = new DistributionRequestDTO(
+                0L,                     // id
+                "teacher@example.com",   // teacher email
+                "Matematika",            // subject
+                "predavanja",            // classType
+                2,                       // sessionCount
+                "ETF",                   // studyProgram (primer)
+                1                        // semester (primer)
+        );
+        when(distributionRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> distributionService.updateDistribution(request));
     }

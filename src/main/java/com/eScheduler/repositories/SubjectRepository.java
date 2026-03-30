@@ -56,5 +56,8 @@ public interface SubjectRepository extends JpaRepository<Subject, Long> {
     @Query("delete from Subject s where s.schoolYear.id = :yearId")
     void deleteBySchoolYearId(@Param("yearId") Long yearId);
 
+    @Query("SELECT s FROM Subject s WHERE s.name = ?1 AND s.studyProgram = ?2 AND s.semester = ?3")
+    Subject findBySubjectNameStudyProgramSemester(String name, String studyProgram, Integer semester);
+
 
 }

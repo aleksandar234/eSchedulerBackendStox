@@ -1,13 +1,13 @@
 package com.eScheduler.controllers;
 
 import com.eScheduler.model.Subject;
-import com.eScheduler.repositories.DistributionRepository;
 import com.eScheduler.requests.DistributionRequestDTO;
 import com.eScheduler.requests.TeacherRequestDTO;
 import com.eScheduler.responses.customDTOClasses.DistributionDTO;
 import com.eScheduler.services.DistributionService;
 import com.eScheduler.services.SubjectService;
 import com.eScheduler.services.TeacherService;
+import com.eScheduler.repositories.DistributionRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,8 +33,10 @@ class DistributionControllerIntegrationTest {
 
     @Autowired
     private DistributionService distributionService;
+
     @Autowired
     private SubjectService subjectService;
+
     @Autowired
     private TeacherService teacherService;
 
@@ -43,14 +45,59 @@ class DistributionControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        subjectService.addNewSubject(new Subject(null, "Matematika", "RN", 1, 3, 2, 1, "obavezan", 15, 10, null));
-        subjectService.addNewSubject(new Subject(null, "Programiranje", "RN", 2, 4, 2, 0, "izbroni", 16, 8, null));
+        // Predmeti
+        Subject baze = new Subject();
+        baze.setName("Baze podataka");
+        baze.setStudyProgram("RN"); // mora da se slaže sa testom
+        baze.setSemester(1);        // validan semestar za test
+        baze.setLectureHours(3);
+        baze.setExerciseHours(2);
+        baze.setPracticumHours(1);
+        baze.setMandatory("obavezan");
+        baze.setLectureSessions(15);
+        baze.setExerciseSessions(10);
+        subjectService.addNewSubject(baze);
 
-        teacherService.addNewTeacher(new TeacherRequestDTO(null,"pPetrovic@raf.rs", "Petar", "Petrovic", "nastavnik",false));
-        teacherService.addNewTeacher(new TeacherRequestDTO(null,"aAnic@raf.rs", "Ana", "Anic", "saradnik",true));
+        Subject prepoznavanje = new Subject();
+        prepoznavanje.setName("Prepoznavanje govora");
+        prepoznavanje.setStudyProgram("RN");
+        prepoznavanje.setSemester(1);
+        prepoznavanje.setLectureHours(4);
+        prepoznavanje.setExerciseHours(2);
+        prepoznavanje.setPracticumHours(0);
+        prepoznavanje.setMandatory("izborni");
+        prepoznavanje.setLectureSessions(16);
+        prepoznavanje.setExerciseSessions(8);
+        subjectService.addNewSubject(prepoznavanje);
 
-        distributionService.addNewDistribution(new DistributionRequestDTO(null, "pPetrovic@raf.rs", "Matematika", "predavanja", 10));
-        distributionService.addNewDistribution(new DistributionRequestDTO(null, "aAnic@raf.rs", "Programiranje", "vezbe", 5));
+        // Nastavnici
+        teacherService.addNewTeacher(new TeacherRequestDTO(
+                null, "pPetrovic@raf.rs", "Petar", "Petrovic", "nastavnik", false
+        ));
+        teacherService.addNewTeacher(new TeacherRequestDTO(
+                null, "aAnic@raf.rs", "Ana", "Anic", "saradnik", true
+        ));
+
+        // Raspodele
+        distributionService.addNewDistribution(new DistributionRequestDTO(
+                null,
+                "pPetrovic@raf.rs",
+                "Baze podataka",
+                "predavanja",
+                10,
+                "RN",  // studyProgram
+                1      // semester
+        ));
+
+        distributionService.addNewDistribution(new DistributionRequestDTO(
+                null,
+                "aAnic@raf.rs",
+                "Prepoznavanje govora",
+                "vezbe",
+                5,
+                "RN",
+                1
+        ));
     }
 
     @Test
@@ -59,26 +106,28 @@ class DistributionControllerIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(2)))
-                .andExpect(jsonPath("$[0].subject.name", is("Matematika")))
-                .andExpect(jsonPath("$[1].subject.name", is("Programiranje")));
+                .andExpect(jsonPath("$[0].subject.name", is("Baze podataka")))
+                .andExpect(jsonPath("$[1].subject.name", is("Prepoznavanje govora")));
     }
 
     @Test
     void createDistribution_createsNewDistribution() throws Exception {
         String newDistributionJson = """
-            {
-                "teacher": "pPetrovic@raf.rs",
-                "subject": "Matematika",
-                "classType": "vezbe",
-                "sessionCount": 3
-            }
-            """;
+        {
+            "teacher": "pPetrovic@raf.rs",
+            "subject": "Baze podataka",
+            "classType": "vezbe",
+            "sessionCount": 3
+        }
+        """;
 
         mockMvc.perform(post("/api/distributions")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(newDistributionJson))
+                        .content(newDistributionJson)
+                        .param("studyProgram", "RN")   // <-- ovde šalješ query param
+                        .param("semester", "1"))       // <-- ovde šalješ query param
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.subject.name", is("Matematika")))
+                .andExpect(jsonPath("$.subject.name", is("Baze podataka")))
                 .andExpect(jsonPath("$.classType", is("vezbe")))
                 .andExpect(jsonPath("$.sessionCount", is(3)));
     }
@@ -86,7 +135,7 @@ class DistributionControllerIntegrationTest {
     @Test
     void deleteDistributionById_deletesDistribution() throws Exception {
         DistributionDTO distribution = distributionService.getAllDistributions().stream()
-                .filter(d -> d.getSubject().getName().equals("Programiranje"))
+                .filter(d -> d.getSubject().getName().equals("Prepoznavanje govora"))
                 .findFirst()
                 .orElseThrow();
 
@@ -102,7 +151,7 @@ class DistributionControllerIntegrationTest {
     @Test
     void updateDistribution_updatesDistribution() throws Exception {
         DistributionDTO distribution = distributionService.getAllDistributions().stream()
-                .filter(d -> d.getSubject().getName().equals("Matematika"))
+                .filter(d -> d.getSubject().getName().equals("Baze podataka"))
                 .findFirst()
                 .orElseThrow();
 
@@ -110,9 +159,11 @@ class DistributionControllerIntegrationTest {
             {
                 "id": %d,
                 "teacher": "pPetrovic@raf.rs",
-                "subject": "Matematika",
+                "subject": "Baze podataka",
                 "classType": "vezbe",
-                "sessionCount": 3
+                "sessionCount": 1,
+                "studyProgram": "RN",
+                "semester": 4
             }
             """, distribution.getId());
 
@@ -121,10 +172,8 @@ class DistributionControllerIntegrationTest {
                         .content(updatedDistributionJson))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(distribution.getId().intValue())))
-                .andExpect(jsonPath("$.subject.name", is("Matematika")))
+                .andExpect(jsonPath("$.subject.name", is("Baze podataka")))
                 .andExpect(jsonPath("$.classType", is("vezbe")))
-                .andExpect(jsonPath("$.sessionCount", is(3)));
-        
+                .andExpect(jsonPath("$.sessionCount", is(1)));
     }
-
 }
