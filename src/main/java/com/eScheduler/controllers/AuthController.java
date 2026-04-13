@@ -52,7 +52,15 @@ public class AuthController {
             }
 
             boolean isAdmin = userLoginService.getUserByCredentials(email);
+
+            System.out.println("USER FOUND: " + email);
+            System.out.println("IS ADMIN: " + isAdmin);
+
+
             String jwtToken = jwtUtil.generateToken(email,isAdmin);
+
+            System.out.println("JWT: " + jwtToken);
+
             return ResponseEntity.ok(new AuthenticationDTO("Login successful", true, jwtToken));
         } catch (Exception e) {
             return ResponseEntity.status(401).body(new AuthenticationDTO("Authentication failed", false, null));
