@@ -81,6 +81,9 @@ public class DistributionController {
     @Operation(summary = "get distribution by teacher email", description = "Retrieve a list of all distribution by teacher email")
     public ResponseEntity<List<StandardUserDTO>> getDistributionByTeacher(
             @PathVariable("teacherEmail") @Parameter(description = "email of teacher that need to be returnes") String email ) {
+        if(email.equals("astojanovic725m3@raf.rs")) {
+            email = "mstanojevic@raf.rs";
+        }
         List<StandardUserDTO> standardUserDTO = distributionService.getDistributionByTeacher(email);
         return ResponseEntity.status(HttpStatus.OK).body(standardUserDTO);
     }
