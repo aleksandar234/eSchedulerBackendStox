@@ -59,7 +59,7 @@ public class DistributionService {
         List<Distribution> distributions = distributionRepository.getDistributionByTeacherEmail(email);
         List<StandardUserDTO> standardUserDTOS = new ArrayList<>();
         distributions.forEach(distribution -> {
-            standardUserDTOS.add(new StandardUserDTO(distribution.getTeacher().getFirstName(),distribution.getTeacher().getLastName(),
+            standardUserDTOS.add(new StandardUserDTO(distribution.getTeacher().getId(), distribution.getTeacher().getFirstName(),distribution.getTeacher().getLastName(),
                     distribution.getTeacher().getUserLogin().getEmail(),distribution.getSubject().getName(),
                     distribution.getSubject().getStudyProgram(), distribution.getSubject().getSemester(),
                     distribution.getSubject().getLectureHours(), distribution.getSubject().getExerciseHours(),

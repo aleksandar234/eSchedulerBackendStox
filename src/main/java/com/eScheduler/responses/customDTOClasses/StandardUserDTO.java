@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class StandardUserDTO {
+    private Long teacherId;
     private String firstName;
     private String lastName;
     private String email;
