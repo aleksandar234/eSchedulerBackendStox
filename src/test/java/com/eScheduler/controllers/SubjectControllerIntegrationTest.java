@@ -142,4 +142,59 @@ class SubjectControllerIntegrationTest {
                 .andExpect(jsonPath("$.practicumHours", is(1)))
                 .andExpect(jsonPath("$.mandatory", is("obavezan")));
     }
+
+    // Testira kreiranje predmeta sa imenom koje već postoji, očekuje se status 409 Conflict
+    @Test
+    void createSubject_returnsConflict_whenSubjectAlreadyExists() throws Exception {
+        String subjectJson = """
+        {
+            "name": "Matematika",
+            "studyProgram": "RN",
+            "semester": 1,
+            "lectureHours": 3,
+            "exerciseHours": 2,
+            "practicumHours": 1,
+            "mandatory": "obavezan",
+            "lectureSessions": 15,
+            "exerciseSessions": 10
+        }
+        """;
+
+        mockMvc.perform(post("/api/subjects")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(subjectJson))
+                .andExpect(status().isConflict());
+    }
+
+
+    @Test
+    void updateSubject_returnsNotFound_whenSubjectDoesNotExist() throws Exception {
+        String subjectJson = """
+        {
+            "id": 999,
+            "name": "Nepostojeci predmet",
+            "studyProgram": "RN",
+            "semester": 1,
+            "lectureHours": 3,
+            "exerciseHours": 2,
+            "practicumHours": 1,
+            "mandatory": "obavezan",
+            "lectureSessions": 10,
+            "exerciseSessions": 5
+        }
+        """;
+
+        mockMvc.perform(put("/api/subjects")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(subjectJson))
+                .andExpect(status().isNotFound());
+    }
+
+    // Testira brisanje predmeta koji ne postoji, očekuje se status 404 Not Found
+    @Test
+    void deleteSubject_returnsNotFound_whenSubjectDoesNotExist() throws Exception {
+        mockMvc.perform(delete("/api/subjects/999"))
+                .andExpect(status().isNotFound());
+    }
+
 }

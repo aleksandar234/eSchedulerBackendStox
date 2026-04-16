@@ -128,4 +128,52 @@ class TeacherControllerIntegrationTest {
                 .andExpect(jsonPath("$", hasSize(1)))
                 .andExpect(jsonPath("$[0].title", is("saradnik")));
     }
+
+    // Ne mogu da napravim nastavnika sa istim emailom, treba da vrati 409 Conflict
+    @Test
+    void createTeacher_returnsConflict_whenTeacherAlreadyExists() throws Exception {
+        String teacherJson = """
+        {
+            "email": "pPetrovic@raf.rs",
+            "firstName": "Petar",
+            "lastName": "Petrovic",
+            "title": "nastavnik",
+            "isAdmin": false
+        }
+        """;
+
+        mockMvc.perform(post("/api/teachers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(teacherJson))
+                .andExpect(status().isConflict());
+    }
+
+    // Ne mogu da updatujem nastavnika koji ne psotoji, treba da vrati 404 Not Found
+    @Test
+    void updateTeacher_returnsNotFound_whenTeacherDoesNotExist() throws Exception {
+        String updatedTeacherJson = """
+        {
+            "id": 999,
+            "email": "nepostojeci@raf.rs",
+            "firstName": "Neko",
+            "lastName": "Nepostojeci",
+            "title": "nastavnik",
+            "isAdmin": false
+        }
+        """;
+
+        mockMvc.perform(put("/api/teachers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(updatedTeacherJson))
+                .andExpect(status().isNotFound());
+    }
+
+    // Ne mogu da obrisem nastavnika koji ne postoji, treba da vratim 404 Not Found
+    @Test
+    void deleteTeacher_returnsNotFound_whenTeacherDoesNotExist() throws Exception {
+        mockMvc.perform(delete("/api/teachers/999"))
+                .andExpect(status().isNotFound());
+    }
+
+
 }

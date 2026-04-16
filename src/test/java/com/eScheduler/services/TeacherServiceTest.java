@@ -93,7 +93,8 @@ class TeacherServiceTest {
         UserLogin userLogin = new UserLogin();
         userLogin.setEmail(request.getEmail());
 
-        when(teacherRepository.findByUserLoginEmail(request.getEmail())).thenReturn(Optional.of(new Teacher()));
+        when(teacherRepository.findByEmail(request.getEmail()))
+                .thenReturn(Optional.of(userLogin));
 
         assertThrows(ConflictException.class, () -> teacherService.addNewTeacher(request));
     }
@@ -139,5 +140,67 @@ class TeacherServiceTest {
         when(teacherRepository.findById(request.getId())).thenReturn(Optional.empty());
 
         assertThrows(NotFoundException.class, () -> teacherService.updateTeacher(request));
+    }
+
+    @Test
+    void updateTeacher_updatesUserLoginEmailAndAdminFlag() {
+        TeacherRequestDTO request = new TeacherRequestDTO(
+                1L,
+                "novi.email@example.com",
+                "Marko",
+                "Markovic",
+                "Profesor",
+                true
+        );
+
+        UserLogin userLogin = new UserLogin();
+        userLogin.setId(1L);
+        userLogin.setEmail("stari.email@example.com");
+        userLogin.setAdmin(false);
+
+        Teacher oldTeacher = new Teacher();
+        oldTeacher.setId(1L);
+        oldTeacher.setFirstName("Marko");
+        oldTeacher.setLastName("Markovic");
+        oldTeacher.setTitle("Asistent");
+        oldTeacher.setUserLogin(userLogin);
+
+        when(teacherRepository.findById(request.getId()))
+                .thenReturn(Optional.of(oldTeacher));
+
+        TeacherDTO result = teacherService.updateTeacher(request);
+
+        assertEquals("novi.email@example.com", oldTeacher.getUserLogin().getEmail());
+        assertTrue(oldTeacher.getUserLogin().isAdmin());
+        assertEquals("novi.email@example.com", result.getEmail());
+        assertEquals("Profesor", result.getTitle());
+    }
+
+    @Test
+    void updateTeacher_handlesNullUserLogin() {
+        TeacherRequestDTO request = new TeacherRequestDTO(
+                1L,
+                "mMarkovic@example.com",
+                "Marko",
+                "Markovic",
+                "Profesor",
+                true
+        );
+
+        Teacher oldTeacher = new Teacher();
+        oldTeacher.setId(1L);
+        oldTeacher.setFirstName("StaroIme");
+        oldTeacher.setLastName("StaroPrezime");
+        oldTeacher.setTitle("Asistent");
+        oldTeacher.setUserLogin(null);
+
+        when(teacherRepository.findById(request.getId()))
+                .thenReturn(Optional.of(oldTeacher));
+
+        TeacherDTO result = teacherService.updateTeacher(request);
+
+        assertEquals("Marko", result.getFirstName());
+        assertEquals("Markovic", result.getLastName());
+        assertEquals("Profesor", result.getTitle());
     }
 }

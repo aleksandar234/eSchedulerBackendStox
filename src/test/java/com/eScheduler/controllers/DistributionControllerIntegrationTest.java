@@ -176,4 +176,93 @@ class DistributionControllerIntegrationTest {
                 .andExpect(jsonPath("$.classType", is("vezbe")))
                 .andExpect(jsonPath("$.sessionCount", is(1)));
     }
+
+    // Ako posaljem POST sa nepostojecim teacherom, api treba da vrati gresku 409 Conflict, jer ne moze da se napravi raspodela sa nepostojecim nastavnikom
+    @Test
+    void createDistribution_returnsConflict_whenTeacherDoesNotExist() throws Exception {
+        String requestJson = """
+    {
+        "teacher": "nepostojeci@raf.rs",
+        "subject": "Baze podataka",
+        "classType": "predavanja",
+        "sessionCount": 2
+    }
+    """;
+
+        mockMvc.perform(post("/api/distributions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson)
+                        .param("studyProgram", "RN")
+                        .param("semester", "1"))
+                .andExpect(status().isConflict());
+    }
+
+    // Ako posaljem POST sa nepostojecim predmetom, api treba da vrati gresku 409 Conflict, jer ne moze da se napravi raspodela sa nepostojecim predmetom
+    @Test
+    void createDistribution_returnsConflict_whenSubjectDoesNotExist() throws Exception {
+        String requestJson = """
+    {
+        "teacher": "pPetrovic@raf.rs",
+        "subject": "Nepostojeci predmet",
+        "classType": "predavanja",
+        "sessionCount": 2
+    }
+    """;
+
+        mockMvc.perform(post("/api/distributions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson)
+                        .param("studyProgram", "RN")
+                        .param("semester", "1"))
+                .andExpect(status().isConflict());
+    }
+
+    // Ako posaljem POST sa sessionCount koji je veci od preostalih casova za taj predmet, api treba da vrati gresku 409 Conflict, jer ne moze da se napravi raspodela sa vise casova nego sto ih ima preostalo
+    @Test
+    void createDistribution_returnsConflict_whenLectureLimitIsExceeded() throws Exception {
+        String requestJson = """
+    {
+        "teacher": "pPetrovic@raf.rs",
+        "subject": "Baze podataka",
+        "classType": "predavanja",
+        "sessionCount": 6
+    }
+    """;
+
+        mockMvc.perform(post("/api/distributions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson)
+                        .param("studyProgram", "RN")
+                        .param("semester", "1"))
+                .andExpect(status().isConflict());
+    }
+
+    // Ako posaljem PUT sa id-jem koji ne postoji, api treba da vrati gresku 404 Not Found, jer ne moze da se azurira raspodela koja ne postoji
+    @Test
+    void updateDistribution_returnsNotFound_whenDistributionDoesNotExist() throws Exception {
+        String requestJson = """
+    {
+        "id": 999,
+        "teacher": "pPetrovic@raf.rs",
+        "subject": "Baze podataka",
+        "classType": "predavanja",
+        "sessionCount": 2,
+        "studyProgram": "RN",
+        "semester": 1
+    }
+    """;
+
+        mockMvc.perform(put("/api/distributions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson))
+                .andExpect(status().isNotFound());
+    }
+
+    // Pokusam da obrisem id koji ne postoji, vrati ce mi 404 NotFound.
+    @Test
+    void deleteDistribution_returnsNotFound_whenDistributionDoesNotExist() throws Exception {
+        mockMvc.perform(delete("/api/distributions/999"))
+                .andExpect(status().isNotFound());
+    }
+
 }

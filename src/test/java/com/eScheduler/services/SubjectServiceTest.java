@@ -65,7 +65,7 @@ class SubjectServiceTest {
     void addNewSubject_savesAndReturnsSubjectDTO() {
         Subject subject = createSubject(null,"OOP");
         when(subjectRepository.findByName(subject.getName())).thenReturn(Optional.empty());
-        when(subjectRepository.save(subject)).thenReturn(createSubject(1L,"OOP"));
+        when(subjectRepository.save(any(Subject.class))).thenReturn(createSubject(1L, "OOP"));
 
         SubjectDTO result = subjectService.addNewSubject(subject);
 
@@ -117,4 +117,32 @@ class SubjectServiceTest {
 
         assertThrows(NotFoundException.class, () -> subjectService.updateSubject(subject));
     }
+
+
+    // Kada radim update menjaju se samo polja koja nisu null, ostala ostaju ista.
+    @Test
+    void updateSubject_updatesOnlyNonNullFields() {
+        // --- STARI SUBJECT ---
+        Subject oldSubject = createSubject(1L, "OOP");
+
+        // --- NOVI (PARCIJALNI UPDATE) ---
+        Subject updateRequest = new Subject();
+        updateRequest.setId(1L);
+        updateRequest.setName("NMA");   // samo ovo menjamo
+        // ostalo ostaje null
+
+        when(subjectRepository.findById(1L))
+                .thenReturn(Optional.of(oldSubject));
+
+        when(subjectRepository.save(oldSubject))
+                .thenReturn(oldSubject);
+
+        SubjectDTO result = subjectService.updateSubject(updateRequest);
+
+        // --- PROVERE ---
+        assertEquals("NMA", result.getName());         // promenjeno
+        assertEquals("RN", result.getStudyProgram());  // ostalo isto
+        assertEquals(2, result.getSemester());         // ostalo isto
+    }
+
 }

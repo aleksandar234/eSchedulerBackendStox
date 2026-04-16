@@ -33,14 +33,23 @@ public class SubjectService {
         return subjectDTOS;
     }
 
-    public SubjectDTO addNewSubject(Subject subject){
-        if(subjectRepository.findByName(subject.getName()).isEmpty()){
-            subjectRepository.save(subject);
-            return mapToSubjectDTO(subject);
-        }else{
+    public SubjectDTO addNewSubject(Subject subject) {
+        if (subjectRepository.findByName(subject.getName()).isEmpty()) {
+            Subject savedSubject = subjectRepository.save(subject);
+            return mapToSubjectDTO(savedSubject);
+        } else {
             throw new ConflictException("Predmet sa tim imenom vec postoji");
         }
     }
+
+//    public SubjectDTO addNewSubject(Subject subject){
+//        if(subjectRepository.findByName(subject.getName()).isEmpty()){
+//            subjectRepository.save(subject);
+//            return mapToSubjectDTO(subject);
+//        }else{
+//            throw new ConflictException("Predmet sa tim imenom vec postoji");
+//        }
+//    }
 
     public void deleteSubjectById(Long id){
         subjectRepository.findById(id).orElseThrow(() -> new NotFoundException("Predmet nije pronadjen"));
