@@ -458,5 +458,32 @@ public class DistributionService {
         copyDistributions(sourceYearId, targetYearId);
     }
 
+    private StandardUserDTO mapToStandardUserDTO(Distribution d) {
+        return new StandardUserDTO(
+                d.getTeacher().getId(),
+                d.getTeacher().getFirstName(),
+                d.getTeacher().getLastName(),
+                d.getTeacher().getUserLogin().getEmail(),
+
+                d.getSubject().getName(),
+                d.getSubject().getStudyProgram(),
+                d.getSubject().getSemester(),
+                d.getSubject().getLectureHours(),
+                d.getSubject().getExerciseHours(),
+
+                d.getClassType(),
+                d.getSessionCount()
+        );
+    }
+
+    public List<StandardUserDTO> getDistributionByTeacherAndSchoolYear(String email, Long schoolYearId) {
+        List<Distribution> distributions =
+                distributionRepository.getDistributionByTeacherEmailAndSchoolYear(email, schoolYearId);
+
+        return distributions.stream()
+                .map(this::mapToStandardUserDTO)
+                .toList();
+    }
+
 
 }

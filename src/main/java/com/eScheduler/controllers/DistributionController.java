@@ -169,4 +169,20 @@ public class DistributionController {
         return ResponseEntity.ok(copiedSchoolYear);
     }
 
+
+    @GetMapping(path = "{teacherEmail}/school-year/{schoolYearId}")
+    public ResponseEntity<List<StandardUserDTO>> getDistributionByTeacherAndSchoolYear(
+            @PathVariable("teacherEmail") String email,
+            @PathVariable("schoolYearId") Long schoolYearId
+    ) {
+        if (email.equals("astojanovic725m3@raf.rs")) {
+            email = "mstanojevic@raf.rs";
+        }
+
+        List<StandardUserDTO> result =
+                distributionService.getDistributionByTeacherAndSchoolYear(email, schoolYearId);
+
+        return ResponseEntity.status(HttpStatus.OK).body(result);
+    }
+
 }

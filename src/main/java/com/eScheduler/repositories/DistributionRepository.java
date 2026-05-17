@@ -44,6 +44,12 @@ public interface DistributionRepository extends JpaRepository<Distribution, Long
     @Query("delete from Distribution d where d.schoolYear.id = :yearId")
     void deleteBySchoolYearId(@Param("yearId") Long yearId);
 
+    @Query("SELECT d FROM Distribution d WHERE d.teacher.userLogin.email = :email AND d.schoolYear.id = :schoolYearId")
+    List<Distribution> getDistributionByTeacherEmailAndSchoolYear(
+            @Param("email") String email,
+            @Param("schoolYearId") Long schoolYearId
+    );
+
 
 }
 
