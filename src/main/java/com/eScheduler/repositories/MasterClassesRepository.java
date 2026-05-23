@@ -12,4 +12,9 @@ public interface MasterClassesRepository extends JpaRepository<MasterClasses, Lo
 
     List<MasterClasses> findBySkolskaGodinaId(Long skolskaGodinaId);
 
+    List<MasterClasses> findByNastavnikIdAndStepenStudijaOrderByDatumUnosaDesc(
+            Long nastavnikId,
+            String stepenStudija
+    );
+
 }

@@ -6,6 +6,7 @@ import com.eScheduler.responses.customDTOClasses.MasterClassDTO;
 import com.eScheduler.responses.customDTOClasses.MasterDoctoralClassSYDTO;
 import com.eScheduler.services.MasterClassesService;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -46,6 +47,12 @@ public class MasterClassesController {
         return service.save(masterPredmet);
     }
 
+    @GetMapping("/{nastavnikId}/ostale")
+    public ResponseEntity<List<MasterClasses>> getOtherActivitiesForTeacher(
+            @PathVariable Long nastavnikId
+    ) {
+        return ResponseEntity.ok(service.getOtherActivitiesForTeacher(nastavnikId));
+    }
 
 
 
